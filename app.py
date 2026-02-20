@@ -71,16 +71,21 @@ def call_gemini_api(captured_bytes, uploaded_bytes, final_prompt):
 
         print(f"Sending request with {len(request_content)} parts...")
         
+        # ADDED: Explicitly tell Gemini 2.5 to output an Image!
         response = client.models.generate_content(
             model=settings.MODEL_NAME,
-            contents=request_content
+            contents=request_content,
+            config=types.GenerateContentConfig(
+                response_modalities=["IMAGE"]
+            )
         )
 
         if not response.candidates:
             return {"success": False, "error": "The model did not return any candidates."}
 
-        if response.candidates[0].finish_reason != 1:
-            return {"success": False, "error": f"Model finished with non-STOP reason: {response.candidates[0].finish_reason}"}
+        finish_reason = str(response.candidates[0].finish_reason)
+        if finish_reason not in ["1", "STOP", "FinishReason.STOP"]:
+            return {"success": False, "error": f"Model finished with non-STOP reason: {finish_reason}"}
 
         generated_image_bytes = None
         generated_mime_type = "image/png"  

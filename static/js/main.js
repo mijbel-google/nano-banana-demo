@@ -1,9 +1,7 @@
-
 document.addEventListener('DOMContentLoaded', () => {
     
     const video = document.getElementById('webcam');
     const canvas = document.getElementById('canvas');
-    const fileInput = document.getElementById('file-input');
 
     const camView = document.getElementById('cam-view');
     const snapView = document.getElementById('snap-view');
@@ -11,26 +9,19 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const snappedPhoto = document.getElementById('snapped-photo');
     const snappedContainer = document.getElementById('snapped-container');
-    const uploadedPhoto = document.getElementById('uploaded-photo');
-    const uploadedContainer = document.getElementById('uploaded-container');
     const processedImage = document.getElementById('processed-image');
 
     const step1Controls = document.getElementById('controls-step-1');
     const snapBtn = document.getElementById('snap-btn');
     
     const step2Controls = document.getElementById('controls-step-2');
-    const uploadBtn = document.getElementById('upload-btn');
-    const nextStep3Btn = document.getElementById('next-step3-btn');
-    const backStep1Btn = document.getElementById('back-step1-btn');
-    
-    const step3Controls = document.getElementById('controls-step-3');
     const customPrompt = document.getElementById('custom-prompt');
     const funPromptBtns = document.querySelectorAll('.fun-prompt-btn');
     const submitBtn = document.getElementById('submit-btn');
-    const backStep2Btn = document.getElementById('back-step2-btn');
+    const backStep1Btn = document.getElementById('back-step1-btn');
 
     const loadingState = document.getElementById('loading-state');
-    const step4Controls = document.getElementById('controls-step-4');
+    const step3Controls = document.getElementById('controls-step-3');
     const resultDescription = document.getElementById('result-description');
     const errorMessage = document.getElementById('error-message');
     const resetBtn = document.getElementById('reset-btn');
@@ -38,25 +29,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const qrcodeContainer = document.getElementById('qrcode');
 
     let capturedImageDataUrl = null;
-    let uploadedImageDataUrl = null;
     let qrCodeInstance = null; 
 
-    let currentStream = null; // Keeps track of the active camera so we can turn it off
+    let currentStream = null;
     const cameraSelect = document.getElementById('cameraSelect');
 
-    // --- Initialization ---
-    // --- Initialization ---
+    // --- Webcam Initialization ---
     async function startWebcam() {
-        // 1. Stop the current camera stream if one is running
         if (currentStream) {
             currentStream.getTracks().forEach(track => track.stop());
         }
 
-        // 2. Check if a specific camera is selected in the dropdown
         const deviceId = cameraSelect ? cameraSelect.value : null;
         const videoConstraints = deviceId ? { deviceId: { exact: deviceId } } : { facingMode: 'user' };
 
-        // 3. Start the selected camera
         try {
             currentStream = await navigator.mediaDevices.getUserMedia({ 
                 video: videoConstraints,
@@ -70,18 +56,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // New function to populate the dropdown menu
     async function getCameras() {
         if (!cameraSelect) return;
         try {
             const devices = await navigator.mediaDevices.enumerateDevices();
             const videoDevices = devices.filter(device => device.kind === 'videoinput');
             
-            cameraSelect.innerHTML = ''; // Clear default options
+            cameraSelect.innerHTML = ''; 
             videoDevices.forEach((device, index) => {
                 const option = document.createElement('option');
                 option.value = device.deviceId;
-                // Use the device's real name (e.g., "Logitech USB"), or fallback to "Camera 1"
                 option.text = device.label || `Camera ${index + 1}`;
                 cameraSelect.appendChild(option);
             });
@@ -90,55 +74,35 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
+    // --- UI Routing Logic ---
     function hideAllSteps() {
         step1Controls.style.display = 'none';
         step2Controls.style.display = 'none';
         step3Controls.style.display = 'none';
-        step4Controls.style.display = 'none';
         loadingState.style.display = 'none';
         errorMessage.style.display = 'none';
     }
 
     function updateImageDisplayAtStep(step) {
-        // Hide all main views initially
         camView.style.display = 'none';
         snapView.style.display = 'none';
         resultView.style.display = 'none';
-
         snappedContainer.style.display = 'none';
-        uploadedContainer.style.display = 'none';
 
         if (step === 1) {
             camView.style.display = 'flex';
-            
-        } else if (step === 2 || step === 3) {
+        } else if (step === 2) {
             snapView.style.display = 'flex'; 
-
             if (capturedImageDataUrl) {
                 snappedPhoto.src = capturedImageDataUrl;
                 snappedContainer.style.display = 'flex'; 
                 snappedContainer.style.flexDirection = 'column';
                 snappedContainer.style.justifyContent = 'center';
             }
-
-            if (uploadedImageDataUrl) {
-                uploadedPhoto.src = uploadedImageDataUrl;
-                uploadedPhoto.style.display = 'block';
-                uploadedContainer.style.display = 'flex';
-                uploadedContainer.style.flexDirection = 'column';
-                uploadedContainer.style.justifyContent = 'center';
-            } else if (step === 2) {
-                uploadedContainer.style.display = 'flex';
-                uploadedContainer.style.flexDirection = 'column';
-                uploadedContainer.style.justifyContent = 'center';
-                uploadedPhoto.style.display = 'none'; 
-            }
-
-        } else if (step === 4) {
+        } else if (step === 3) {
             resultView.style.display = 'flex';
         }
     }
-
 
     function goToStep1() {
         hideAllSteps();
@@ -157,16 +121,6 @@ document.addEventListener('DOMContentLoaded', () => {
         updateImageDisplayAtStep(2);
     }
 
-    function goToStep3() {
-        if (!uploadedImageDataUrl) {
-            alert("Please upload an image first.");
-            return;
-        }
-        hideAllSteps();
-        step3Controls.style.display = 'block';
-        updateImageDisplayAtStep(3);
-    }
-
     function showLoadingState() {
         hideAllSteps();
         loadingState.style.display = 'block';
@@ -175,12 +129,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function showResult() {
         hideAllSteps();
-        step4Controls.style.display = 'block';
-        updateImageDisplayAtStep(4);
+        step3Controls.style.display = 'block';
+        updateImageDisplayAtStep(3);
     }
 
-
-
+    // --- Event Listeners ---
     snapBtn.addEventListener('click', () => {
         if (video.readyState === video.HAVE_ENOUGH_DATA) {
             canvas.width = video.videoWidth;
@@ -188,7 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const context = canvas.getContext('2d');
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
             capturedImageDataUrl = canvas.toDataURL('image/jpeg');
-            goToStep2();
+            goToStep2(); // Jumps directly to prompt selection!
         } else {
             setTimeout(() => {
                 canvas.width = video.videoWidth || 640;
@@ -201,22 +154,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    uploadBtn.addEventListener('click', () => fileInput.click());
-
-    fileInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                uploadedImageDataUrl = event.target.result;
-                updateImageDisplayAtStep(2);
-            };
-            reader.readAsDataURL(file);
-        }
-        fileInput.value = '';
-    });
-
-    nextStep3Btn.addEventListener('click', goToStep3);
     backStep1Btn.addEventListener('click', () => {
         capturedImageDataUrl = null;
         goToStep1();
@@ -228,12 +165,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    backStep2Btn.addEventListener('click', goToStep2);
-
     submitBtn.addEventListener('click', async () => {
         const userPrompt = customPrompt.value;
         if (!userPrompt) { alert('Please provide a prompt!'); return; }
-        if (!capturedImageDataUrl || !uploadedImageDataUrl) { alert('Missing images!'); return; }
+        if (!capturedImageDataUrl) { alert('Missing camera image!'); return; }
 
         showLoadingState();
 
@@ -243,12 +178,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     captured_image: capturedImageDataUrl,
-                    uploaded_image: uploadedImageDataUrl,
+                    uploaded_image: null, // Nullified to bypass the backend's double-image requirement
                     prompt: userPrompt,
                 }),
             });
 
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            if (!response.ok) {
+
+                let errorMsg = `HTTP error! status: ${response.status}`;
+                try {
+                    const errData = await response.json();
+                    if (errData.error) errorMsg = errData.error;
+                } catch (e) {
+                    console.error("Could not parse error JSON");
+                }
+                throw new Error(errorMsg);
+            }
 
             const data = await response.json();
             processedImage.src = data.processed_image;
@@ -265,23 +210,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 correctLevel : QRCode.CorrectLevel.H
             });
 
-            showResult();
+            showResult(); // Properly route to the final screen!
 
         } catch (error) {
             console.error('Error:', error);
-            errorMessage.textContent = `Error: ${error.message}`;
-            errorMessage.style.display = 'block';
-            goToStep3(); 
+            goToStep2(); // Reset the UI FIRST
+            errorMessage.textContent = `Error: ${error.message} (Check Cloud Run logs for details)`;
+            errorMessage.style.display = 'block'; // Show the error SECOND!
         }
     });
 
     resetBtn.addEventListener('click', () => {
         customPrompt.value = '';
         snappedPhoto.src = '';
-        uploadedPhoto.src = '';
         processedImage.src = '';
         capturedImageDataUrl = null;
-        uploadedImageDataUrl = null;
         if (qrCodeInstance) { qrCodeInstance.clear(); qrCodeInstance = null; }
         qrcodeContainer.innerHTML = '';
         goToStep1();
@@ -296,7 +239,6 @@ document.addEventListener('DOMContentLoaded', () => {
         printWindow.setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
     });
 
-    // Start the default camera first to get permissions, then load the camera list
     startWebcam().then(() => {
         getCameras();
         if (cameraSelect) {

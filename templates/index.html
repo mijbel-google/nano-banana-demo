@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Photo Booth</title>
-    
+
+    <link rel="icon" href="{{ url_for('static', filename='images/Nano-banana.png') }}" type="image/png">    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -41,7 +42,7 @@
         
         <div class="card title-card text-center mb-4">
             <div class="card-body">
-                <p class="card-text text-muted mt-1">Showcase for <code>gemini-2.5-flash-image-preview</code></p>
+                <p class="card-text text-muted mt-1">Showcase for <code>gemini-2.5-pro</code></p>
             </div>
         </div> 
         
@@ -56,19 +57,11 @@
                         </div>
                         
                         <div class="image-content text-center bg-light" id="snap-view" style="display: none; padding: 10px;">
-                            <div class="row h-100 align-items-center justify-content-center g-2">
-                                
-                                <div class="col-md-6 h-100 preview-box-col" id="snapped-container" style="display:none;">
+                            <div class="row h-100 w-100 align-items-center justify-content-center g-2">
+                                <div class="col-12 h-100 preview-box-col" id="snapped-container" style="display:none;">
                                     <div class="image-preview-container">
-                                        <p class="small text-muted mb-1">Camera Capture</p>
+                                        <p class="small text-muted mb-1">Your Capture</p>
                                         <img id="snapped-photo" class="img-fluid rounded" alt="Your snapped photo">
-                                    </div>
-                                </div>
-                                
-                                <div class="col-md-6 h-100 preview-box-col" id="uploaded-container" style="display:none;">
-                                    <div class="image-preview-container">
-                                        <p class="small text-muted mb-1">Uploaded Image</p>
-                                        <img id="uploaded-photo" class="img-fluid rounded" alt="Your uploaded photo">
                                     </div>
                                 </div>
                             </div>
@@ -86,8 +79,6 @@
                 <div class="card h-100 shadow-sm">
                     <div class="card-body p-4 p-md-5 d-flex flex-column">
                         
-                        <input type="file" id="file-input" accept="image/*" style="display: none;">
-
                         <div class="control-state" id="controls-step-1">
                             <h2 class="h4 border-bottom-blue pb-2 mb-3">Step 1: Capture Photo</h2>
                             <p class="text-muted">Take a photo using your camera.</p>
@@ -99,20 +90,8 @@
                         </div>
                         
                         <div class="control-state" id="controls-step-2" style="display: none;">
-                            <h2 class="h4 border-bottom-red pb-2 mb-3">Step 2: Upload Image</h2>
-                            
-                            <p class="text-muted mb-2">Please upload the photo of the <strong>Football Player</strong>.</p>
-
-                            <button id="upload-btn" class="btn btn-outline-primary btn-lg w-100 py-3 mb-4">📤 Upload Image</button>
-                            <div class="d-grid gap-2">
-                                <button id="next-step3-btn" class="btn btn-primary">Next: Select Prompt ➡</button>
-                                <button id="back-step1-btn" class="btn btn-outline-secondary">⬅ Back to Camera</button>
-                            </div>
-                        </div>
-
-                        <div class="control-state" id="controls-step-3" style="display: none;">
-                            <h2 class="h4 border-bottom-yellow pb-2 mb-3">Step 3: Select Prompt</h2>
-                            <label class="form-label">Choose a fun prompt:</label>
+                            <h2 class="h4 border-bottom-yellow pb-2 mb-3">Step 2: Select Prompt</h2>
+                            <label class="form-label">Choose a fun Ramadan/Kuwait prompt:</label>
                             <div class="fun-prompts-container mb-3">
                                 {% for prompt in fun_prompts %}
                                     {% set color_class = ['btn-google-blue', 'btn-google-red', 'btn-google-yellow', 'btn-google-green'][loop.index0 % 4] %}
@@ -122,10 +101,10 @@
                                 {% endfor %}
                             </div>
                             <label for="custom-prompt" class="form-label mt-2">Or write your own:</label>
-                            <textarea id="custom-prompt" class="form-control" rows="3" placeholder="e.g., add sunglasses"></textarea>
+                            <textarea id="custom-prompt" class="form-control" rows="3" placeholder="e.g., place me in a beautiful Ghabga tent"></textarea>
                             <div class="d-grid gap-2 d-md-flex mt-4">
-                                <button id="back-step2-btn" class="btn btn-outline-secondary col-4">⬅ Back</button>
-                                <button id="submit-btn" class="btn btn-primary col-8">🍌 Run Nano Banana!</button>
+                                <button id="back-step1-btn" class="btn btn-outline-secondary col-4">⬅ Retake</button>
+                                <button id="submit-btn" class="btn btn-primary col-8">✨ Generate Magic!</button>
                             </div>
                         </div>
                         
@@ -135,14 +114,14 @@
                                 <div class="spinner-border" style="width: 3rem; height: 3rem;" role="status">
                                     <span class="visually-hidden">Loading...</span>
                                 </div>
-                                <p class="text-muted fs-5 mt-3">Nano Banana is thinking... 🤔</p>
+                                <p class="text-muted fs-5 mt-3">Gemini is thinking... 🤔</p>
                             </div>
                         </div>
 
                         <div id="error-message" class="alert alert-danger mt-3" style="display: none;"></div>
 
-                        <div class="control-state" id="controls-step-4" style="display: none;">
-                            <h2 class="h4 border-bottom-green pb-2 mb-3">Step 4: Your Creation!</h2>
+                        <div class="control-state" id="controls-step-3" style="display: none;">
+                            <h2 class="h4 border-bottom-green pb-2 mb-3">Step 3: Your Creation!</h2>
                             <p id="result-description" class="alert alert-light"></p>
                             <button id="reset-btn" class="btn btn-primary btn-lg w-100 py-3">🔄 Start Over</button>
                             <div class="row mt-4 pt-3 border-top align-items-center">
@@ -151,7 +130,7 @@
                                     <label class="text-muted small mt-2">Scan for Mobile</label>
                                 </div>
                                 <div class="col-6 text-center">
-                                    <button id="print-btn" class="btn btn-outline-secondary p-3">
+                                    <button id="print-btn" class="btn btn-outline-secondary p-3 w-100">
                                         <span style="font-size: 2.5rem; line-height: 1;">🖨</span>
                                         <span class="d-block mt-1 fw-bold">Print</span>
                                     </button>
