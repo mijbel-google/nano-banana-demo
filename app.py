@@ -6,7 +6,8 @@ from flask import Flask, render_template, request, jsonify, Response, send_file
 from dotenv import load_dotenv
 from PIL import Image
 
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 
 import settings
 
@@ -16,32 +17,36 @@ app = Flask(__name__)
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
+# 1. Initialize the new Client instead of using genai.configure
+client = None
+
 if not GEMINI_API_KEY:
     print("WARNING: GEMINI_API_KEY environment variable not set.")
 else:
     try:
-        genai.configure(api_key=GEMINI_API_KEY)
+        client = genai.Client(api_key=GEMINI_API_KEY)
+        print("Successfully initialized Google GenAI Client.")
     except Exception as e:
-        print(f"Error configuring Google AI: {e}")
+        print(f"Error configuring Google AI Client: {e}")
 
 LATEST_IMAGE_CACHE = {
     "bytes": None,
     "mime_type": "image/png"
 }
 
-try:
-    model = genai.GenerativeModel(settings.MODEL_NAME)
-    print(f"Successfully loaded model: {settings.MODEL_NAME}")
-except Exception as e:
-    print(f"Error initializing GenerativeModel: {e}")
-    print("Please ensure the model name in settings.py is correct and you have access.")
-    model = None
+# 2. We no longer initialize a model object here! 
+# We just verify the client is ready to use your settings.
+if client:
+    print(f"Ready to use model: {settings.MODEL_NAME}")
+else:
+    print("Client not initialized. Please check your API key.")
 
 
 def call_gemini_api(captured_bytes, uploaded_bytes, final_prompt):
     global LATEST_IMAGE_CACHE
-    if not model:
-        return {"success": False, "error": "Model is not initialized. Check server logs."}
+
+    if not client:
+        return {"success": False, "error": "Client is not initialized. Check server logs."}
     
     print(f"--- Calling Gemini API (Model: {settings.MODEL_NAME}) ---")
     print(f"Prompt: {final_prompt}")
@@ -49,25 +54,27 @@ def call_gemini_api(captured_bytes, uploaded_bytes, final_prompt):
     try:
 
         request_content = []
-        
         request_content.append(final_prompt)
 
         if captured_bytes:
-            request_content.append("clicked iamge:")
-            request_content.append({
-                "mime_type": "image/jpeg",
-                "data": captured_bytes
-            })
+            request_content.append("clicked image:")
+            # New SDK way to handle raw bytes
+            request_content.append(
+                types.Part.from_bytes(data=captured_bytes, mime_type="image/jpeg")
+            )
 
         if uploaded_bytes:
             request_content.append("uploaded image:")
-            request_content.append({
-                "mime_type": "image/jpeg",
-                "data": uploaded_bytes
-            })
+            request_content.append(
+                types.Part.from_bytes(data=uploaded_bytes, mime_type="image/jpeg")
+            )
 
         print(f"Sending request with {len(request_content)} parts...")
-        response = model.generate_content(request_content)
+        
+        response = client.models.generate_content(
+            model=settings.MODEL_NAME,
+            contents=request_content
+        )
 
         if not response.candidates:
             return {"success": False, "error": "The model did not return any candidates."}
@@ -117,7 +124,7 @@ def index():
 
 @app.route('/api/process_image', methods=['POST'])
 def process_image_api():
-    if not model:
+    if not client:
         return jsonify({"error": "Server model is not configured or failed to load. Check logs."}), 500
 
     try:

@@ -41,14 +41,28 @@ document.addEventListener('DOMContentLoaded', () => {
     let uploadedImageDataUrl = null;
     let qrCodeInstance = null; 
 
+    let currentStream = null; // Keeps track of the active camera so we can turn it off
+    const cameraSelect = document.getElementById('cameraSelect');
+
+    // --- Initialization ---
     // --- Initialization ---
     async function startWebcam() {
+        // 1. Stop the current camera stream if one is running
+        if (currentStream) {
+            currentStream.getTracks().forEach(track => track.stop());
+        }
+
+        // 2. Check if a specific camera is selected in the dropdown
+        const deviceId = cameraSelect ? cameraSelect.value : null;
+        const videoConstraints = deviceId ? { deviceId: { exact: deviceId } } : { facingMode: 'user' };
+
+        // 3. Start the selected camera
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: 'user' },
+            currentStream = await navigator.mediaDevices.getUserMedia({ 
+                video: videoConstraints,
                 audio: false 
             });
-            video.srcObject = stream;
+            video.srcObject = currentStream;
             video.play();
         } catch (err) {
             console.error("Error accessing webcam: ", err);
@@ -56,6 +70,25 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // New function to populate the dropdown menu
+    async function getCameras() {
+        if (!cameraSelect) return;
+        try {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const videoDevices = devices.filter(device => device.kind === 'videoinput');
+            
+            cameraSelect.innerHTML = ''; // Clear default options
+            videoDevices.forEach((device, index) => {
+                const option = document.createElement('option');
+                option.value = device.deviceId;
+                // Use the device's real name (e.g., "Logitech USB"), or fallback to "Camera 1"
+                option.text = device.label || `Camera ${index + 1}`;
+                cameraSelect.appendChild(option);
+            });
+        } catch (err) {
+            console.error("Error getting camera list: ", err);
+        }
+    }
     
     function hideAllSteps() {
         step1Controls.style.display = 'none';
@@ -263,6 +296,12 @@ document.addEventListener('DOMContentLoaded', () => {
         printWindow.setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
     });
 
-    startWebcam();
+    // Start the default camera first to get permissions, then load the camera list
+    startWebcam().then(() => {
+        getCameras();
+        if (cameraSelect) {
+            cameraSelect.addEventListener('change', startWebcam);
+        }
+    });
     goToStep1();
 });

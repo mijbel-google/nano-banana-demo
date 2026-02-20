@@ -1,11 +1,13 @@
-MODEL_NAME = "gemini_model"
+MODEL_NAME = "gemini-3-pro-image-preview"
 
 PROMPT_PREFIX = "Generate the image based on following prompt while making sure Not to change the face of the person, and write 'Google Cloud' as watermark at the top left corner of the generated image: "
 
 FUN_PROMPTS = [
-    "Put both of us on football stadium pitch ready for kick-off",
-    "Show both of us as playing football on the surface of Mars",
-    "I am Receiving a trophy from the football player"
+    "Inside a modern Kuwaiti Ghabga tent with traditional red Sadu patterns, glowing lanterns.",
+    "On a glamorous rooftop overlooking the illuminated Kuwait Towers at night.",
+    "In the vibrant Souq Al Mubarakiya during a festive Ramadan night, surrounded by traditional stalls.",
+    "In the serene Kuwaiti desert at twilight, next to a beautifully lit modern Iftar table."
+    "In a modern Kuwait City tech lounge at night, featuring geometric Islamic art and neon lights."
 ]
 
 TOP_LEFT_ICON = {
