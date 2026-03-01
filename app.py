@@ -123,7 +123,8 @@ def index():
         'index.html', 
         fun_prompts=settings.FUN_PROMPTS,
         top_left_icon=settings.TOP_LEFT_ICON,
-        top_right_icon=settings.TOP_RIGHT_ICON
+        top_right_icon=settings.TOP_RIGHT_ICON,
+        model_name=settings.MODEL_NAME
     )
 
 
