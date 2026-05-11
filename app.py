@@ -16,18 +16,36 @@ load_dotenv()
 app = Flask(__name__)
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+USE_VERTEX = os.environ.get("USE_VERTEXAI", "false").lower() == "true"
 
 # 1. Initialize the new Client instead of using genai.configure
 client = None
 
-if not GEMINI_API_KEY:
-    print("WARNING: GEMINI_API_KEY environment variable not set.")
-else:
-    try:
+# --- Replacement Block Starts Here ---
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+USE_VERTEX = os.environ.get("USE_VERTEXAI", "false").lower() == "true"
+
+client = None
+
+try:
+    if USE_VERTEX:
+        # Use Cloud Run's built-in identity (No key needed!)
+        # We'll pass GOOGLE_CLOUD_PROJECT in the deploy command
+        client = genai.Client(
+            vertexai=True, 
+            project=os.environ.get("GOOGLE_CLOUD_PROJECT"), 
+            location=os.environ.get("LOCATION", "global")
+        )
+        print(f"Successfully initialized Vertex AI Client in {os.environ.get('LOCATION', 'global')}")
+    elif GEMINI_API_KEY:
+        # Fallback for local development using an API Key
         client = genai.Client(api_key=GEMINI_API_KEY)
-        print("Successfully initialized Google GenAI Client.")
-    except Exception as e:
-        print(f"Error configuring Google AI Client: {e}")
+        print("Successfully initialized Google AI Client via API Key.")
+    else:
+        print("WARNING: Neither GEMINI_API_KEY nor USE_VERTEXAI is set. Client remains None.")
+except Exception as e:
+    print(f"Error initializing Google GenAI Client: {e}")
+# --- Replacement Block Ends Here ---
 
 LATEST_IMAGE_CACHE = {
     "bytes": None,

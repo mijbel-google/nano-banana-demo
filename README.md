@@ -1,4 +1,4 @@
-# 🌙 Nano Banana Demo - Google Cloud Kuwait Ramadan Edition ☁️
+# 🌙 Nano Banana Demo - Google Cloud Kuwait Events Edition ☁️
 
 This is a customized version of the [Nano Banana Demo](https://github.com/pradeesi/nano-banana-demo), specifically tailored for a Google Cloud Kuwait customer events. 
 
